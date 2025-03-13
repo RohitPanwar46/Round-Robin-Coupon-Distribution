@@ -11,7 +11,7 @@ export async function POST(req) {
   const userCookies = cookies();
   let userCookie = userCookies.get("claim_token")?.value || uuidv4();
 
-  // 1️⃣ **Check if user has already claimed a coupon**
+  // Check if user has already claimed a coupon
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const existingClaim = await Claim.findOne({
     $or: [{ ip: userIP }, { cookie: userCookie }],
@@ -25,7 +25,7 @@ export async function POST(req) {
     );
   }
 
-  // 2️⃣ **Find the next available coupon**
+  // Find the next available coupon
   const coupon = await Coupon.findOneAndUpdate(
     { assigned: false },
     { assigned: true },
@@ -36,10 +36,10 @@ export async function POST(req) {
     return Response.json({ error: "No more coupons available." }, { status: 404 });
   }
 
-  // 3️⃣ **Store the claim record**
+  // Store the claim record
   await Claim.create({ ip: userIP, cookie: userCookie });
 
-  // 4️⃣ **Set cookie in response**
+  // Set cookie in response
   userCookies.set("claim_token", userCookie, { httpOnly: true, maxAge: 3600 });
 
   return Response.json(
